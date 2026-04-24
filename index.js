@@ -7,7 +7,6 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Agar Render tidak sleep, kita buat endpoint dummy
 app.get('/', (req, res) => {
     res.send('Bot WhatsApp Aktif! ❤️');
 });
@@ -16,7 +15,7 @@ app.listen(PORT, () => {
     console.log(`Server jalan di port ${PORT}`);
 });
 
-// Fungsi untuk memastikan folder session ada
+// Pastikan folder session ada
 if (!fs.existsSync('./session')){
     fs.mkdirSync('./session');
 }
@@ -25,7 +24,8 @@ async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState('session');
 
     const sock = makeWASocket({
-        printQRInTerminal: true,
+        // Kita set false dulu, nanti kita handle manual
+        printQRInTerminal: false, 
         auth: state,
         logger: pino({ level: 'silent' })
     });
@@ -36,9 +36,14 @@ async function startBot() {
         const { connection, lastDisconnect, qr } = update;
         
         if (qr) {
-            // Tampilkan QR di log Render
-            qrcode.generate(qr, { small: true });
-            console.log("SCAN QR CODE DI ATAS!");
+            console.log("-----------------------------------------");
+            console.log("🔥 SCAN QR CODE DI BAWAH INI 🔥");
+            console.log("-----------------------------------------");
+            // Paksa render QR ke terminal
+            qrcode.generate(qr, { small: true }); 
+            console.log("-----------------------------------------");
+            console.log("Jika tidak terlihat jelas, screenshot log ini & scan via HP lain");
+            console.log("-----------------------------------------");
         }
 
         if (connection === 'close') {
@@ -48,7 +53,7 @@ async function startBot() {
                 startBot();
             }
         } else if (connection === 'open') {
-            console.log('✅ Bot terhubung sukses!');
+            console.log('✅ Bot terhubung sukses! Sayangku hebat! 🥰');
         }
     });
 
@@ -58,7 +63,6 @@ async function startBot() {
             const from = message.key.remoteJid;
             const body = message.message?.conversation || message.message?.extendedTextMessage?.text;
 
-            // LOGIKA BOT SEDERHANA
             if (body && body.toLowerCase() === 'halo') {
                 await sock.sendMessage(from, { text: 'Halo sayang! Bot aktif nih 🥰' });
             }
